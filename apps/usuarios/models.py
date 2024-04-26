@@ -1,7 +1,7 @@
 from django.db import models
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
-from django.db.models.signals import post_save
-from django.dispatch import receiver
+from django.contrib.auth.hashers import check_password as check_pass_user
+from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.hashers import make_password
 
 
 class UsuarioManager(BaseUserManager):
@@ -22,6 +22,7 @@ class UsuarioManager(BaseUserManager):
 
 class Usuario(models.Model):
     username = models.CharField(max_length=255, unique=True)
+    password = models.CharField(max_length=128)
     email = models.EmailField("Correo Electrónico", max_length=255, unique=True)
     telefono = models.IntegerField()
     direccion = models.CharField(max_length=50)
@@ -34,7 +35,19 @@ class Usuario(models.Model):
 
     def __str__(self):
         return self.username
-
+    
+    def save(self, *args, **kwargs):
+        # Encriptar la contraseña antes de guardar el usuario
+        if self.password:
+            self.password = make_password(self.password)
+        super().save(*args, **kwargs)
+    
+    def check_password(self, raw_password):
+        return check_pass_user(raw_password, self.password)
+    @property
+    def is_authenticated(self):
+        return True
+    
 
 class Persona(Usuario):
     id_per = models.AutoField(unique=True, primary_key=True)
@@ -73,18 +86,3 @@ class Administrador(Usuario):
         verbose_name = "Administrador"
         verbose_name_plural = "Administradores"
 
-
-# oli
-@receiver(post_save, sender=Persona)
-@receiver(post_save, sender=Organizacion)
-@receiver(post_save, sender=Administrador)
-def crear_usuario(sender, instance, created, **kwargs):
-    if created:
-        Usuario.objects.create(
-            username=instance.username,
-            email=instance.email,
-            telefono=instance.telefono,
-            direccion=instance.direccion,
-            is_active=instance.is_active,
-            is_staff=instance.is_staff,
-        )

@@ -18,9 +18,23 @@ class LoginView(APIView):
         username = request.data.get("username")
         password = request.data.get("password")
 
-        # Verificar credenciales
-        user = authenticate(username=username, password=password)
-        if user is None:
+        # Verificar credenciales en Persona
+        try:
+            user = Persona.objects.get(username=username)
+        except Persona.DoesNotExist:
+            # Verificar credenciales en Organizacion
+            try:
+                user = Organizacion.objects.get(username=username)
+            except Organizacion.DoesNotExist:
+                # Verificar credenciales en Administrador
+                try:
+                    user = Administrador.objects.get(username=username)
+                except Administrador.DoesNotExist:
+                    return Response(
+                        {"error": "El usuario no existe"}, status=status.HTTP_401_UNAUTHORIZED
+                    )
+
+        if not user.check_password(password):
             return Response(
                 {"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED
             )

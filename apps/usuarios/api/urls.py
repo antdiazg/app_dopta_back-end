@@ -6,6 +6,7 @@ from apps.usuarios.api.api import (
     OrgRetrieveUpdateDestroy,
     AdminListCreate,
     AdminRetrieveUpdateDestroy,
+    LoginView
 )
 
 urlpatterns = [
@@ -27,5 +28,5 @@ urlpatterns = [
         AdminRetrieveUpdateDestroy.as_view(),
         name="administrador-retrieve-update-destroy",
     ),
-    # Repite el mismo patrón para Organizacion y Administrador
+    path('login/', LoginView.as_view(), name='login'),
 ]
