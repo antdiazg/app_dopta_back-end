@@ -55,7 +55,8 @@ class Usuario(models.Model):
 
 class CustomToken(models.Model):
     key = models.CharField(_("Key"), max_length=40, primary_key=True)
-    user_id = models.IntegerField(_("User ID"), unique=True)
+    user_id = models.IntegerField(_("User ID"))
+    clase_usuario = models.CharField(_("Nombre de clase"), max_length=50)
     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
 
     class Meta:

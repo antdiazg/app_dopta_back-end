@@ -1,4 +1,3 @@
-import uuid
 from rest_framework.decorators import api_view
 from rest_framework import generics
 from django.contrib.auth.hashers import make_password, check_password
@@ -26,38 +25,47 @@ class LoginView(APIView):
             password = serializer.validated_data.get("password")
 
             # Autenticar el usuario en cada uno de los modelos de usuario personalizados
-            user_types = [Persona, Organizacion, Administrador]
-            for user_type in user_types:
-                user = self.authenticate_user(user_type, username, password)
+            clases = [Persona, Organizacion, Administrador]
+            for clase in clases:
+                user = self.authenticate_user(clase, username, password)
                 if user:
-                    token = self.generate_token(user)
+                    print("Encontrado", user.username, clase)
+                    token = self.generate_token(
+                        user,
+                    )
                     return Response({"token": token.key}, status=status.HTTP_200_OK)
 
         # Las credenciales son inválidas o el usuario no se encontró en ninguno de los modelos
-        return Response({"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED)
+        return Response(
+            {"error": "Credenciales inválidas"}, status=status.HTTP_401_UNAUTHORIZED
+        )
 
-    def authenticate_user(self, user_type, username, password):
+    def authenticate_user(self, clase, username, password):
         try:
-            user = user_type.objects.get(username=username)
+            user = clase.objects.get(username=username)
             if user.check_password(password):
                 return user
-        except user_type.DoesNotExist:
+        except clase.DoesNotExist:
             pass
-        
+
         return None
 
-    def generate_token(self, user):
+    def generate_token(self, user, clase):
+
         # Verificar si el usuario ya tiene un token asignado
-        token = CustomToken.objects.filter(user_id=user.id).first()
-        if token:
+        token = CustomToken.objects.filter(user_id=user.id, clase_usuario=clase).first()
+        if token is not None:
             return token
-        
-        # Generar un valor único para la clave key
-        token_key = str(uuid.uuid4())
-        
-        # Si no tiene un token asignado, creamos uno nuevo con la clave key generada
-        new_token = CustomToken.objects.create(user_id=user.id, key=token_key)
-        return new_token
+
+        else:
+            # Generar un hash único basado en el ID del usuario y el nombre del modelo
+            token_key = make_password(
+                f"{user.id}-{type(user).__name__}"
+            )  # Si no tiene un token asignado, creamos uno nuevo con la clave key generada
+            new_token = CustomToken.objects.create(
+                user_id=user.id, key=token_key, clase_usuario=clase
+            )
+            return new_token
 
 
 # Persona
