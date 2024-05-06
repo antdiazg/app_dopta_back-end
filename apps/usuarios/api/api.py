@@ -30,9 +30,7 @@ class LoginView(APIView):
                 user = self.authenticate_user(clase, username, password)
                 if user:
                     print("Encontrado", user.username, clase)
-                    token = self.generate_token(
-                        user,
-                    )
+                    token = self.generate_token(user, clase)
                     return Response({"token": token.key}, status=status.HTTP_200_OK)
 
         # Las credenciales son inválidas o el usuario no se encontró en ninguno de los modelos
@@ -63,7 +61,7 @@ class LoginView(APIView):
                 f"{user.id}-{type(user).__name__}"
             )  # Si no tiene un token asignado, creamos uno nuevo con la clave key generada
             new_token = CustomToken.objects.create(
-                user_id=user.id, key=token_key, clase_usuario=clase
+                user_id=user.id, key=token_key, clase_usuario=clase.__name__
             )
             return new_token
 
