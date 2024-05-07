@@ -11,10 +11,10 @@ ALLOWED_HOSTS = []
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": "appdoptadb",
-        "USER": "admin",
-        "PASSWORD": "AY8whUrSkGRvMA1BjUPz",
-        "HOST": "appdoptadb.cbq6e40k09wf.us-east-1.rds.amazonaws.com",
+        "NAME": "db_adopta",
+        "USER": "root",
+        "PASSWORD": "Appdopta*1",
+        "HOST": "appdopta-aws.cdw28ekqc8xz.us-east-2.rds.amazonaws.com",
         "PORT": "3306",
     }
 }
