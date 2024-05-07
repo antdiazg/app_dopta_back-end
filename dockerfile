@@ -1,6 +1,6 @@
 FROM python:3.12-alpine3.19
 
-RUN apk add --no-cache pkgconfig
+RUN apk add --no-cache mariadb-dev
 
 WORKDIR /usr/src/app
 
