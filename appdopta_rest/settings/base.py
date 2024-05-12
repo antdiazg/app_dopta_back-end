@@ -17,6 +17,7 @@ ALLOWED_HOSTS = []
 
 
 # Application definition
+BASE_URL = 'http://localhost:8000' 
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -27,10 +28,17 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "rest_framework",
     "rest_framework.authtoken",
+    "rest_framework_simplejwt",
     "simple_history",
     "apps.usuarios",
 ]
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "siga.educacion@gmail.com"
+EMAIL_HOST_PASSWORD = "ejqv maso ouyr kqdm"
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -46,6 +54,7 @@ MIDDLEWARE = [
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
+        "rest_framework_simplejwt.authentication.JWTAuthentication",
     ],
 }
 

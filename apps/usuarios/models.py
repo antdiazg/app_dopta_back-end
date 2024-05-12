@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.hashers import check_password as check_pass_user
-from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import BaseUserManager, AbstractBaseUser
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.tokens import PasswordResetTokenGenerator
 from django.db import models
@@ -23,7 +23,7 @@ class UsuarioManager(BaseUserManager):
         return self.create_user(username, email, password, **extra_fields)
 
 
-class Usuario(models.Model):
+class Usuario(AbstractBaseUser):
     username = models.CharField(max_length=255, unique=True)
     password = models.CharField(max_length=128)
     email = models.EmailField("Correo Electrónico", max_length=255, unique=True)
@@ -53,18 +53,18 @@ class Usuario(models.Model):
         return True
 
 
-class CustomToken(models.Model):
-    key = models.CharField(_("Key"), max_length=40, primary_key=True)
-    user_id = models.IntegerField(_("User ID"))
-    clase_usuario = models.CharField(_("Nombre de clase"), max_length=50)
-    created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
+# class CustomToken(models.Model):
+#     key = models.CharField(_("Key"), max_length=40, primary_key=True)
+#     user_id = models.IntegerField(_("User ID"))
+#     clase_usuario = models.CharField(_("Nombre de clase"), max_length=50)
+#     created_at = models.DateTimeField(_("Created At"), auto_now_add=True)
 
-    class Meta:
-        verbose_name = _("Custom Token")
-        verbose_name_plural = _("Custom Tokens")
+#     class Meta:
+#         verbose_name = _("Custom Token")
+#         verbose_name_plural = _("Custom Tokens")
 
-    def __str__(self):
-        return self.key
+#     def __str__(self):
+#         return self.key
 
 
 class Persona(Usuario):

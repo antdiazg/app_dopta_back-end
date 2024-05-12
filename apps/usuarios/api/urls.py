@@ -6,10 +6,19 @@ from apps.usuarios.api.api import (
     OrgRetrieveUpdateDestroy,
     AdminListCreate,
     AdminRetrieveUpdateDestroy,
-    LoginView,
+    # LoginView,
+    RegistroPersona,
+    ActivateAccount
+    
+)
+from rest_framework_simplejwt.views import ( 
+    TokenObtainPairView,
+    TokenRefreshView,
 )
 
 urlpatterns = [
+    path("api/token/", TokenObtainPairView.as_view(), name="token_obtain_pair"),
+    path("api/token/refresh/", TokenRefreshView.as_view(), name="token_refresh"),
     path("personas/", PersonaListCreate.as_view(), name="persona-list-create"),
     path(
         "personas/<int:pk>/",
@@ -28,5 +37,7 @@ urlpatterns = [
         AdminRetrieveUpdateDestroy.as_view(),
         name="administrador-retrieve-update-destroy",
     ),
-    path("login/", LoginView.as_view(), name="login"),
+    # path("login/", LoginView.as_view(), name="login"),
+    path("personas/registro/", RegistroPersona.as_view(), name="registro-persona"),
+    path('activate-account/<str:user_type>/', ActivateAccount.as_view(), name='activate-account'),
 ]
