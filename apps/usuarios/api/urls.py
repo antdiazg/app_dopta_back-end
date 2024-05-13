@@ -6,8 +6,9 @@ from apps.usuarios.api.api import (
     OrgRetrieveUpdateDestroy,
     AdminListCreate,
     AdminRetrieveUpdateDestroy,
-    # LoginView,
+    LoginView,
     RegistroPersona,
+    RegistroOrganizacion,
     ActivateAccount
     
 )
@@ -37,7 +38,8 @@ urlpatterns = [
         AdminRetrieveUpdateDestroy.as_view(),
         name="administrador-retrieve-update-destroy",
     ),
-    # path("login/", LoginView.as_view(), name="login"),
+    path("login/", LoginView.as_view(), name="login"),
     path("personas/registro/", RegistroPersona.as_view(), name="registro-persona"),
-    path('activate-account/<str:user_type>/', ActivateAccount.as_view(), name='activate-account'),
+    path("organizacion/registro/", RegistroOrganizacion.as_view(), name="registro-org"),
+    path('activate-account/', ActivateAccount.as_view(), name='activate-account'),
 ]
