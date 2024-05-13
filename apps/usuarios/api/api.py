@@ -1,8 +1,11 @@
 from django.conf import settings
 from django.apps import apps
 from django.urls import reverse
+from django.utils import timezone
+from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.permissions import AllowAny
@@ -15,6 +18,8 @@ from apps.usuarios.api.serializers import (
     OrganizacionSerializer,
     AdministradorSerializer,
     LoginSerializer,
+    RecuPassConfirmacionSerializer,
+    RecuPassSolicitudSerializer,
 )
 
 """ TODO:
@@ -38,16 +43,37 @@ class LoginView(APIView):
             for clase in clases:
                 user = self.authenticate_user(clase, username, password)
                 if user:
-                    # Generar token JWT
-                    print("Encontrado", user.username, clase)
-                    refresh = RefreshToken.for_user(user)
-                    return Response(
-                        {
-                            "refresh": str(refresh),
-                            "access": str(refresh.access_token),
-                        },
-                        status=status.HTTP_200_OK,
-                    )
+                    if user.is_active:
+                        user.last_login = timezone.now()
+                        user.save(update_fields=["last_login"])
+                        # Generar token JWT
+                        refresh = RefreshToken.for_user(user)
+                        return Response(
+                            {
+                                "refresh": str(refresh),
+                                "access": str(refresh.access_token),
+                            },
+                            status=status.HTTP_200_OK,
+                        )
+                    else:
+                        # Generar token de activación
+                        token = default_token_generator.make_token(user)
+                        activation_link = (
+                            settings.BASE_URL
+                            + reverse("activate-account")
+                            + f"?email={user.email}&token={token}&user_type={clase.__name__}"
+                        )
+                        subject = "Activación de cuenta"
+                        message = f"Por favor, haz clic en el siguiente enlace para activar tu cuenta: {activation_link}"
+                        send_mail(
+                            subject, message, settings.EMAIL_HOST_USER, [user.email]
+                        )
+                        return Response(
+                            {
+                                "error": "La cuenta está desactivada, se reenviara un correo con el nuevo link de actualizacion"
+                            },
+                            status=status.HTTP_403_FORBIDDEN,
+                        )
                 else:
                     return Response(
                         {"error": "Credenciales inválidas"},
@@ -60,10 +86,7 @@ class LoginView(APIView):
     def authenticate_user(self, clase, username, password):
         try:
             user = clase.objects.get(username=username)
-            print(clase)
-            print("usuario encontrao")
             if user.check_password(password):
-                print("contraseña correcta")
                 return user
         except clase.DoesNotExist:
             pass
@@ -207,3 +230,83 @@ class ActivateAccount(APIView):
         user_model = apps.get_model(model_name)
 
         return user_model
+
+
+class RecuperarContraseñaSolicitud(APIView):
+    def post(self, request):
+        serializer = RecuPassSolicitudSerializer(data=request.data)
+        if serializer.is_valid():
+            email = serializer.validated_data["email"]
+            user = self.get_user(email)
+            if user:
+                token = default_token_generator.make_token(user)
+                reset_url = reverse("password_reset_confirm")
+                reset_url += (
+                    f"?email={email}&token={token}&model={user.__class__.__name__}"
+                )
+                reset_link = settings.BASE_URL + reset_url
+                subject = "Recuperación de Contraseña"
+                message = f"Haz clic en el siguiente enlace para restablecer tu contraseña: {reset_link}"
+                send_mail(subject, message, settings.EMAIL_HOST_USER, [email])
+                return Response(
+                    {
+                        "message": "Se ha enviado un correo electrónico con instrucciones para restablecer tu contraseña."
+                    },
+                    status=status.HTTP_200_OK,
+                )
+            else:
+                return Response(
+                    {
+                        "error": "No se encontró ningún usuario con ese correo electrónico."
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_user(self, email):
+        users = [Persona, Organizacion, Administrador]
+        for user_model in users:
+            user = user_model.objects.filter(email=email).first()
+            if user:
+                return user
+        return None
+
+
+class RecuperarContraseñaConfirmacion(APIView):
+    def post(self, request):
+        serializer = RecuPassConfirmacionSerializer(data=request.data)
+        if serializer.is_valid():
+            email = request.GET.get("email")
+            token = request.GET.get("token")
+            user_type = request.GET.get("model")
+            new_password = serializer.validated_data["new_password"]
+            try:
+                user = self.get_user(email, user_type)
+                if user and default_token_generator.check_token(user, token):
+
+                    user.password = new_password
+                    user.save()
+                    return Response(
+                        {"message": "La contraseña se ha restablecido correctamente."},
+                        status=status.HTTP_200_OK,
+                    )
+                else:
+                    return Response(
+                        {"error": "Token de restablecimiento de contraseña inválido."},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
+            except:
+                return Response({"error": "Link invalido!!!"})
+        else:
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def get_user(self, email, user_type):
+        if user_type == "Persona":
+            return Persona.objects.filter(email=email).first()
+        elif user_type == "Organizacion":
+            return Organizacion.objects.filter(email=email).first()
+        elif user_type == "Administrador":
+            return Administrador.objects.filter(email=email).first()
+        else:
+            return None

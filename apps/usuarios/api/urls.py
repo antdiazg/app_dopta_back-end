@@ -9,10 +9,11 @@ from apps.usuarios.api.api import (
     LoginView,
     RegistroPersona,
     RegistroOrganizacion,
-    ActivateAccount
-    
+    ActivateAccount,
+    RecuperarContraseñaConfirmacion,
+    RecuperarContraseñaSolicitud,
 )
-from rest_framework_simplejwt.views import ( 
+from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
@@ -41,5 +42,15 @@ urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
     path("personas/registro/", RegistroPersona.as_view(), name="registro-persona"),
     path("organizacion/registro/", RegistroOrganizacion.as_view(), name="registro-org"),
-    path('activate-account/', ActivateAccount.as_view(), name='activate-account'),
+    path("activate-account/", ActivateAccount.as_view(), name="activate-account"),
+    path(
+        "password/reset/",
+        RecuperarContraseñaSolicitud.as_view(),
+        name="password_reset_request",
+    ),
+    path(
+        "password/reset/confirm/",
+        RecuperarContraseñaConfirmacion.as_view(),
+        name="password_reset_confirm",
+    ),
 ]

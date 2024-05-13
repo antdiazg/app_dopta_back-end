@@ -21,3 +21,15 @@ class AdministradorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Administrador
         fields = "__all__"
+
+class RecuPassSolicitudSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class RecuPassConfirmacionSerializer(serializers.Serializer):
+    new_password = serializers.CharField()
+    confirm_new_password = serializers.CharField()
+
+    def validate(self, data):
+        if data['new_password'] != data['confirm_new_password']:
+            raise serializers.ValidationError("Las contraseñas no coinciden.")
+        return data
