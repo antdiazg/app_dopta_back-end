@@ -2,13 +2,11 @@ from django.conf import settings
 from django.apps import apps
 from django.urls import reverse
 from django.utils import timezone
-from django.utils.encoding import force_bytes
 from django.contrib.auth.tokens import default_token_generator
 from django.core.mail import send_mail
-from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from rest_framework import generics
 from rest_framework_simplejwt.tokens import RefreshToken
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, BasePermission
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -24,7 +22,6 @@ from apps.usuarios.api.serializers import (
 
 """ TODO:
     - Eliminar vistas innecesarias
-    - recuperacion de contraseñas
 """
 
 
@@ -112,6 +109,7 @@ class RegistroPersona(APIView):
         serializer = PersonaSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            user.set_password(user.password)
 
             # Generar token de activación
             token = default_token_generator.make_token(user)
@@ -151,6 +149,7 @@ class RegistroOrganizacion(APIView):
         serializer = OrganizacionSerializer(data=request.data)
         if serializer.is_valid():
             user = serializer.save()
+            user.set_password(user.password)
 
             # Generar token de activación
             token = default_token_generator.make_token(user)
@@ -287,6 +286,7 @@ class RecuperarContraseñaConfirmacion(APIView):
 
                     user.password = new_password
                     user.save()
+                    user.set_password(user.password)
                     return Response(
                         {"message": "La contraseña se ha restablecido correctamente."},
                         status=status.HTTP_200_OK,

@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "apps.usuarios",
 ]
 
+
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = "smtp.gmail.com"
 EMAIL_PORT = 587
@@ -107,7 +108,6 @@ USE_I18N = True
 
 USE_TZ = True
 
-# AUTH_USER_MODEL = "usuarios.Usuario"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/

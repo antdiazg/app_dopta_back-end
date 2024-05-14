@@ -42,11 +42,16 @@ class Usuario(AbstractBaseUser):
     def __str__(self):
         return self.username
 
-    def save(self, *args, **kwargs):
-        # Encriptar la contraseña antes de guardar el usuario
-        if self.password:
-            self.password = make_password(self.password)
-        super().save(*args, **kwargs)
+    # def save(self, *args, **kwargs):
+    #     # Encriptar la contraseña antes de guardar el usuario
+    #     if self.password is not None:
+    #         self.password = make_password(self.password)
+    #     super().save(*args, **kwargs)
+
+    def set_password(self, raw_password):
+        self.password = make_password(raw_password)
+        self._password = raw_password
+        self.save()
 
     @property
     def is_authenticated(self):
